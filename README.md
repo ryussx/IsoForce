@@ -51,8 +51,9 @@ Use rated carabiners or soft shackles on the hooks; don't shock-load it.
 
 ## Get the app
 
-Every push to `main` builds an APK: repo → **Actions** → latest run → **Artifacts** →
-**IsoForce-apk**. Install it on Android (allow installs from your browser/files app). Grant
+Download **IsoForce.apk** from the [latest release](../../releases/latest) — no GitHub account
+needed; it's rebuilt on every push to `main`. Install it on Android (allow installs from your
+browser/files app). Grant
 **Nearby devices** when asked; on Xiaomi/HyperOS also turn **Location** on, or BLE scans
 return nothing.
 
