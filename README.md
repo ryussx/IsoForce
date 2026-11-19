@@ -56,9 +56,10 @@ Every push to `main` builds an APK: repo → **Actions** → latest run → **Ar
 **Nearby devices** when asked; on Xiaomi/HyperOS also turn **Location** on, or BLE scans
 return nothing.
 
-To make your own builds install over each other, add a signing keystore as repository
-secrets (`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`); without them
-the build uses the default debug key.
+Builds are signed with the committed `android/app/ci.keystore`, so each one installs over
+the previous. If you fork this, generate your own key and either commit it or supply it as
+repository secrets (`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`),
+which take precedence.
 
 ## Run in the browser (simulator only)
 

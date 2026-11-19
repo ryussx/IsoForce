@@ -16,16 +16,16 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
-    // Release/debug signing: CI supplies a keystore via secrets (see .github/workflows/build.yml).
-    // Without one, Gradle's default debug key is used.
+    // Fixed signing key so every build installs over the previous one. The committed
+    // app/ci.keystore is used unless CI provides one via secrets (see build.yml).
     signingConfigs {
         ci {
             def ksFile = rootProject.file("app/ci.keystore")
             if (ksFile.exists()) {
                 storeFile ksFile
-                storePassword System.getenv("KEYSTORE_PASSWORD") ?: "android"
+                storePassword System.getenv("KEYSTORE_PASSWORD") ?: "127c6f1a3d557aab7e82d43d"
                 keyAlias System.getenv("KEY_ALIAS") ?: "isoforce"
-                keyPassword System.getenv("KEY_PASSWORD") ?: "android"
+                keyPassword System.getenv("KEY_PASSWORD") ?: "127c6f1a3d557aab7e82d43d"
             }
         }
     }
