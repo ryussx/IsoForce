@@ -86,3 +86,10 @@ export class Voice {
     } catch { /* ignore */ }
   }
 }
+
+/** Spoken count: 1…59, then "1 minute", 1…59, "2 minutes", … */
+export function spokenCount(sec: number): string {
+  const m = Math.floor(sec / 60), s = sec % 60;
+  if (s === 0 && m > 0) return m === 1 ? "1 minute" : `${m} minutes`;
+  return String(s);
+}

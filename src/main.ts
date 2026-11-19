@@ -2,7 +2,7 @@ import { BleScale, SimScale, type ForceSource, type ScaleStatus } from "./scale"
 import { SetRecorder, computeMetrics, criticalForce, detectReps, repsFor, performedAt, type SetRecord } from "./metrics";
 import { ForceChart } from "./chart";
 import { buildProtocol, expand, ProtocolRunner, type Phase } from "./protocols";
-import { sounds, Voice } from "./audio";
+import { sounds, Voice, spokenCount } from "./audio";
 import { store } from "./store";
 import { exportText, toCSV, samplesCSV, isoDate } from "./export";
 import { CamPreview } from "./camera";
@@ -246,7 +246,7 @@ function startCallouts() {
     if (secBeep && beepOn) sounds.tick();
     else if (forceDue && beepOn) sounds.tick();
     const parts: string[] = [];
-    if (secCount) parts.push(String(sec));
+    if (secCount) parts.push(spokenCount(sec));
     if (forceDue) parts.push(liveKg.toFixed(0));
     if (!parts.length) return;
     // don't pile up: a plain count waits if the engine is still talking; a force callout interrupts
