@@ -516,7 +516,15 @@ async function renderSettings() {
     await store.deleteMax(b.dataset.mdel!);
     renderSettings(); refreshExerciseContext();
   }));
-  $("exList").innerHTML = exercises.map((e) => `<span>${esc(e)}<button data-xdel="${esc(e)}">✕</button></span>`).join("");
+  $("exList").innerHTML = exercises.map((e) => `<span>${esc(e)}<button data-xren="${esc(e)}" title="Rename">✎</button><button data-xdel="${esc(e)}">✕</button></span>`).join("");
+  $("exList").querySelectorAll<HTMLButtonElement>("button[data-xren]").forEach((b) => (b.onclick = async () => {
+    const old = b.dataset.xren!; const n = prompt(`Rename "${old}" to:`, old); if (!n || n.trim() === old) return;
+    const nn = n.trim();
+    if (exercises.includes(nn) && !confirm(`"${nn}" already exists. Merge "${old}" into it? History from both will be combined.`)) return;
+    await store.renameExercise(old, nn);
+    exercises = await store.exercises(); sets = await store.sets();
+    fillExerciseSelects(); $<HTMLSelectElement>("exercise").value = nn; renderSettings(); renderHistory(); await refreshExerciseContext();
+  }));
   $("exList").querySelectorAll<HTMLButtonElement>("button[data-xdel]").forEach((b) => (b.onclick = async () => {
     exercises = exercises.filter((e) => e !== b.dataset.xdel); await store.saveExercises(exercises); fillExerciseSelects(); renderSettings();
   }));

@@ -114,5 +114,18 @@ export const store = {
     await set(maxKey(), m);
   },
   async exercises(): Promise<string[]> { return get<string[]>(KEY_EX, DEFAULT_EXERCISES); },
+  /** Rename an exercise in the list and in every person's sets and maxes. */
+  async renameExercise(oldName: string, newName: string) {
+    const list = await this.exercises();
+    await set(KEY_EX, [...new Set(list.map((e) => (e === oldName ? newName : e)))]);
+    for (const p of profileState.list) {
+      const sk = p.id === "me" ? KEY_SETS : `ufl.p.${p.id}.sets`, mk = p.id === "me" ? KEY_MAX : `ufl.p.${p.id}.max`;
+      const all = await get<SetRecord[]>(sk, []);
+      if (all.some((r) => r.exercise === oldName)) { for (const r of all) if (r.exercise === oldName) r.exercise = newName; await set(sk, all); }
+      const m = await get<MaxMap>(mk, {}); const out: MaxMap = {}; let changed = false;
+      for (const [k, v] of Object.entries(m)) { const [ex, side] = k.split("|"); if (ex === oldName) changed = true; const nk = `${ex === oldName ? newName : ex}|${side}`; if (!out[nk] || out[nk].kg < v.kg) out[nk] = v; }
+      if (changed) await set(mk, out);
+    }
+  },
   async saveExercises(list: string[]) { await set(KEY_EX, list); },
 };
