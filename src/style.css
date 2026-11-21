@@ -7,7 +7,7 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
 #app { max-width: 720px; margin: 0 auto; padding: env(safe-area-inset-top) 12px calc(24px + env(safe-area-inset-bottom)); }
-.top { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 6px; gap: 8px; flex-wrap: wrap; }
+.top { position: sticky; top: 0; z-index: 30; background: var(--bg); display: flex; justify-content: space-between; align-items: center; padding: calc(8px + env(safe-area-inset-top)) 0 6px; gap: 8px; flex-wrap: wrap; box-shadow: 0 6px 12px -8px rgba(0,0,0,0.8); }
 .brand { font-weight: 800; letter-spacing: 0.5px; font-size: 18px; }
 .brand span { color: var(--accent); }
 .conn { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
@@ -114,3 +114,9 @@ h3 { margin: 18px 0 6px; font-size: 15px; color: var(--muted); text-transform: u
 .campip video { width: 100%; height: 100%; object-fit: cover; }
 .campip video.mirror { transform: scaleX(-1); }
 .camrow { gap: 10px; align-items: center; }
+
+/* people */
+select.profile { max-width: 140px; padding: 6px 8px; font-size: 13px; font-weight: 600; }
+.profile-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--grid); }
+.profile-row .name { flex: 1; font-weight: 600; }
+.profile-row .cur { font-size: 11px; color: var(--accent2); }

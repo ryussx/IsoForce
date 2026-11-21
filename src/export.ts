@@ -4,10 +4,10 @@ import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import { repsFor, performedAt, type SetRecord } from "./metrics";
 
-export function toCSV(sets: SetRecord[]): string {
-  const head = ["id", "date_performed", "recorded_at", "exercise", "side", "mode", "duration_s", "peak_kg", "avg_kg", "output_kgs", "inroad_pct", "reps", "auto_reps", "rep_peaks"];
+export function toCSV(sets: SetRecord[], person = ""): string {
+  const head = ["person", "id", "date_performed", "recorded_at", "exercise", "side", "mode", "duration_s", "peak_kg", "avg_kg", "output_kgs", "inroad_pct", "reps", "auto_reps", "rep_peaks"];
   const rows = sets.map((s) => [
-    s.id, isoDate(performedAt(s)), new Date(s.startedAt).toISOString(), q(s.exercise), s.side, s.mode, s.durationS.toFixed(1),
+    q(person), s.id, isoDate(performedAt(s)), new Date(s.startedAt).toISOString(), q(s.exercise), s.side, s.mode, s.durationS.toFixed(1),
     s.peak, s.avg, s.output, s.inroad, repsFor(s), s.reps?.length ?? 0, q((s.reps ?? []).map((r) => r.peak).join(" ")),
   ].join(","));
   return [head.join(","), ...rows].join("\n");

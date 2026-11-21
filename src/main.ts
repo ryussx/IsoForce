@@ -3,7 +3,7 @@ import { SetRecorder, computeMetrics, criticalForce, detectReps, repsFor, perfor
 import { ForceChart } from "./chart";
 import { buildProtocol, expand, ProtocolRunner, type Phase } from "./protocols";
 import { sounds, Voice, spokenCount } from "./audio";
-import { store } from "./store";
+import { store, profiles } from "./store";
 import { exportText, toCSV, samplesCSV, isoDate } from "./export";
 import { CamPreview } from "./camera";
 
@@ -42,10 +42,39 @@ const PARAMS: Record<string, { key: string; label: string; def: number }[]> = {
   repeaters: [{ key: "reps", label: "reps", def: 6 }, { key: "hold", label: "on s", def: 10 }, { key: "rest", label: "off s", def: 20 }],
 };
 
+// ---------- people ----------
+function renderProfiles() {
+  const cur = profiles.current();
+  $("profileSel").innerHTML = profiles.list().map((p) => `<option value="${esc(p.id)}"${p.id === cur.id ? " selected" : ""}>${esc(p.name)}</option>`).join("") + `<option value="__add">+ Add person…</option>`;
+  $("profileList").innerHTML = profiles.list().map((p) => `<div class="profile-row"><span class="name">${esc(p.name)}</span>${p.id === cur.id ? `<span class="cur">current</span>` : ""}<button class="sm ghost" data-prename="${esc(p.id)}">Rename</button>${p.id !== "me" ? `<button class="sm ghost" data-pdel="${esc(p.id)}">Delete</button>` : ""}</div>`).join("");
+  $("profileList").querySelectorAll<HTMLButtonElement>("[data-prename]").forEach((b) => (b.onclick = async () => {
+    const p = profiles.list().find((x) => x.id === b.dataset.prename)!;
+    const n = prompt("Name", p.name); if (n && n.trim()) { await profiles.rename(p.id, n); renderProfiles(); }
+  }));
+  $("profileList").querySelectorAll<HTMLButtonElement>("[data-pdel]").forEach((b) => (b.onclick = async () => {
+    const p = profiles.list().find((x) => x.id === b.dataset.pdel)!;
+    if (!confirm(`Delete ${p.name} and all of their sets and maxes?`)) return;
+    await profiles.remove(p.id); await switchProfile(profiles.current().id);
+  }));
+}
+async function switchProfile(id: string) {
+  if (recorder.recording) { alert("Stop the current set first."); renderProfiles(); return; }
+  await profiles.select(id);
+  sets = await store.sets();
+  lastSetForExercise = null; bestOutputForExercise = 0;
+  chart.opts.ghost = null;
+  await refreshExerciseContext();
+  renderHistory(); renderSettings(); renderProfiles();
+  $("summary").classList.add("hidden");
+}
+function personTag() { return profiles.current().name.replace(/[^\w]+/g, "_"); }
+
 // ---------- init ----------
 async function init() {
+  await profiles.load();
   exercises = await store.exercises();
   sets = await store.sets();
+  renderProfiles();
   fillExerciseSelects();
   renderParams();
   await refreshExerciseContext();
@@ -273,6 +302,7 @@ async function showSummary(rec: SetRecord) {
   const maxes = await store.maxes();
   const other = rec.side === "left" ? "right" : rec.side === "right" ? "left" : null;
   const lines: string[] = [];
+  lines.push(line("Person", esc(profiles.current().name)));
   lines.push(line("Duration", `${rec.durationS.toFixed(1)} s`));
   lines.push(line("Peak force", `${fmt(rec.peak)} kg`, delta(rec.peak, prev?.peak)));
   lines.push(line("Intensity (avg)", `${fmt(rec.avg)} kg`, delta(rec.avg, prev?.avg)));
@@ -489,6 +519,14 @@ function bindUI() {
   };
   $("btnTare").onclick = () => source?.tare();
   $("btnStart").onclick = startSet;
+  $("profileSel").onchange = async () => {
+    const v = $<HTMLSelectElement>("profileSel").value;
+    if (v === "__add") { const n = prompt("Person's name"); if (n && n.trim()) { await profiles.add(n); await switchProfile(profiles.current().id); } else renderProfiles(); return; }
+    await switchProfile(v);
+  };
+  const addProfile = async () => { const n = $<HTMLInputElement>("newProfile").value.trim(); if (!n) return; await profiles.add(n); $<HTMLInputElement>("newProfile").value = ""; await switchProfile(profiles.current().id); };
+  $("btnAddProfile").onclick = addProfile;
+  $<HTMLInputElement>("newProfile").onkeydown = (e) => { if (e.key === "Enter") addProfile(); };
   $<HTMLInputElement>("camOn").checked = localStorage.getItem("ufl.camOn") === "1";
   const applyCam = async () => {
     const on = $<HTMLInputElement>("camOn").checked;
@@ -547,8 +585,8 @@ function bindUI() {
   $<HTMLInputElement>("ghostOn").checked = ghostOn;
   $<HTMLInputElement>("ghostOn").onchange = (e) => { ghostOn = (e.target as HTMLInputElement).checked; localStorage.setItem("ufl.ghostOn", ghostOn ? "1" : "0"); refreshExerciseContext(); };
   $("histExercise").onchange = renderHistory;
-  $("btnCsv").onclick = () => exportText(`isoforce-${today()}.csv`, toCSV(sets), "text/csv");
-  $("btnJson").onclick = () => exportText(`isoforce-${today()}.json`, JSON.stringify(sets, null, 1), "application/json");
+  $("btnCsv").onclick = () => exportText(`isoforce-${personTag()}-${today()}.csv`, toCSV(sets, profiles.current().name), "text/csv");
+  $("btnJson").onclick = () => exportText(`isoforce-${personTag()}-${today()}.json`, JSON.stringify({ person: profiles.current().name, sets }, null, 1), "application/json");
   $<HTMLInputElement>("voiceOn").onchange = (e) => (voice.enabled = (e.target as HTMLInputElement).checked);
   voice.rate = Number(pref("ufl.voiceRate", "1.2")) || 1.2; voice.pitch = Number(pref("ufl.voicePitch", "1")) || 1;
   const bindVoiceNum = (id: string, key: string, set: (v: number) => void, cur: number) => {

@@ -14,6 +14,7 @@
     <header class="top">
       <div class="brand">Iso <span>Force</span></div>
       <div class="conn">
+        <select id="profileSel" class="profile" title="Who is training"></select>
         <span id="statusPill" class="pill idle"><span id="statusDot" class="dot idle"></span><span id="statusText">Not connected</span><span id="statusKg"></span></span>
         <button id="btnConnect" class="sm">Connect scale</button>
         <button id="btnSim" class="sm ghost">Simulator</button>
@@ -155,6 +156,11 @@
       <h3>Scan debug</h3>
       <p class="help">Everything the phone hears while "Connect scale" is listening. Your WeiHeng shows up as <b>IF_…</b>. If it never appears: allow <b>Nearby devices</b> for this app, turn <b>Location</b> on (Xiaomi needs it for BLE scans), and make sure the scale is on.</p>
       <table class="hist"><thead><tr><th>Name</th><th>RSSI</th><th>Mfr keys</th><th>Payload</th><th>kg</th></tr></thead><tbody id="seenBody"><tr><td colspan="5" class="muted">Not listening.</td></tr></tbody></table>
+
+      <h3>People</h3>
+      <p class="help">Each person has their own set history, ghost traces and maxes. Pick who's training in the top bar. Exercises, protocols and voice settings are shared.</p>
+      <div id="profileList"></div>
+      <div class="row"><input type="text" id="newProfile" placeholder="Add a person" /><button id="btnAddProfile" class="sm">Add</button></div>
 
       <h3>Scale</h3>
       <p class="help">WeiHeng WH-C06 / WH-C100 Bluetooth crane scale. No pairing needed: the app listens for its broadcasts (company ID 0x0100). Turn the scale on, press Connect scale, grant Bluetooth permission. ~10 readings/second.</p>
