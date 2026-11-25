@@ -8,6 +8,7 @@ import { KeepAwake } from "@capacitor-community/keep-awake";
 import { store, profiles } from "./store";
 import { exportText, toCSV, samplesCSV, isoDate } from "./export";
 import { CamPreview } from "./camera";
+import { attachPicker, openPickerFor } from "./picker";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -43,6 +44,14 @@ const PARAMS: Record<string, { key: string; label: string; def: number }[]> = {
   ramp: [{ key: "ramp", label: "ramp s", def: 5 }, { key: "hold", label: "hold s", def: 10 }],
   repeaters: [{ key: "reps", label: "reps", def: 6 }, { key: "hold", label: "on s", def: 10 }, { key: "rest", label: "off s", def: 20 }],
 };
+
+// ---------- header ----------
+function updateHeader() {
+  const ex = $<HTMLSelectElement>("exercise").value || "Choose exercise";
+  const side = $<HTMLSelectElement>("side").value, mode = $<HTMLSelectElement>("protocol").value;
+  $("hdrExName").textContent = ex;
+  $("hdrExMeta").textContent = [side !== "both" ? side : "", mode].filter(Boolean).join(" · ");
+}
 
 // ---------- people ----------
 function renderProfiles() {
@@ -88,7 +97,24 @@ async function init() {
   voice.enabled = $<HTMLInputElement>("voiceOn").checked;
 }
 
+/** Exercises used in this app (sets or maxes), most recently used first. */
+function recentForceExercises(): string[] {
+  const last = new Map<string, number>();
+  for (const st of sets) last.set(st.exercise, Math.max(last.get(st.exercise) ?? 0, st.startedAt));
+  for (const k of Object.keys(maxesCache)) { const ex = k.split("|")[0]; if (!last.has(ex)) last.set(ex, 0); }
+  return [...last.entries()].filter(([e]) => exercises.includes(e)).sort((a, b) => b[1] - a[1]).map(([e]) => e);
+}
+let maxesCache: Record<string, unknown> = {};
+
+async function createExercise(n: string): Promise<boolean> {
+  n = n.trim(); if (!n) return false;
+  if (!exercises.includes(n)) { exercises.push(n); await store.saveExercises(exercises); }
+  fillExerciseSelects(); renderSettings();
+  return true;
+}
+
 function fillExerciseSelects() {
+  setTimeout(updateHeader, 0);
   for (const id of ["exercise", "maxExercise"]) {
     const sel = $<HTMLSelectElement>(id);
     const cur = sel.value;
@@ -143,7 +169,7 @@ async function connect(src: ForceSource) {
   src.onStatus(setStatus);
   src.onSample((s) => {
     liveKg = s.kg;
-    if (curStatus === "live") $("statusKg").textContent = `· ${s.kg.toFixed(1)} kg`;
+    if (curStatus === "live") $("statusKg").textContent = `${s.kg.toFixed(1)} kg`;
     recorder.push(s);
     zoneFeedback(s.kg);
   });
@@ -172,9 +198,9 @@ function setStatus(s: ScaleStatus) {
   $("statusPill").className = `pill ${s}`;
   const labels: Record<ScaleStatus, string> = {
     idle: "Not connected",
-    scanning: "Listening for scale… turn it on / pull the hook",
-    live: `${source?.name ?? "Scale"} connected ✓`,
-    lost: "Signal lost — reconnecting…",
+    scanning: "Listening…",
+    live: "",
+    lost: "Lost — retrying…",
     error: "Error",
   };
   $("statusText").textContent = labels[s];
@@ -542,6 +568,10 @@ function switchTab(name: string) {
 
 function bindUI() {
   document.querySelectorAll<HTMLButtonElement>(".tabs button").forEach((b) => (b.onclick = () => switchTab(b.dataset.tab!)));
+  // header shows the current exercise; tap to change
+  $("hdrExercise").onclick = () => { if (!recorder.recording) openPickerFor($<HTMLSelectElement>("exercise")); };
+  for (const id of ["exercise", "side", "protocol"]) $(id).addEventListener("change", updateHeader);
+  updateHeader();
   $("btnConnect").onclick = async () => {
     if (source instanceof BleScale && (curStatus === "live" || curStatus === "scanning")) {
       await source.stop(); source = null; setStatus("idle"); manualOff = true; return;
@@ -606,6 +636,9 @@ function bindUI() {
   $("btnStop").onclick = stopSet;
   $<HTMLInputElement>("simEffort").oninput = (e) => { const v = Number((e.target as HTMLInputElement).value); if (sim) sim.effort = v; $("simVal").textContent = String(v); };
   $("exercise").onchange = refreshExerciseContext;
+  attachPicker($<HTMLSelectElement>("exercise"), { recent: recentForceExercises, all: () => exercises, onCreate: createExercise });
+  attachPicker($<HTMLSelectElement>("maxExercise"), { recent: recentForceExercises, all: () => exercises, onCreate: createExercise });
+  attachPicker($<HTMLSelectElement>("histExercise"), { recent: recentForceExercises, all: () => exercises, allOption: { value: "", label: "All exercises" } });
   $("btnNewEx").onclick = () => { $("newExBox").classList.remove("hidden"); $<HTMLInputElement>("newExName").focus(); };
   $("btnNewExCancel").onclick = () => { $("newExBox").classList.add("hidden"); $<HTMLInputElement>("newExName").value = ""; };
   const saveNewEx = async () => {
