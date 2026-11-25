@@ -103,9 +103,9 @@ export const store = {
     await set(setsKey(), all.filter((s) => s.id !== id));
   },
   async maxes(): Promise<MaxMap> { return get<MaxMap>(maxKey(), {}); },
-  async setMax(exercise: string, side: string, kg: number) {
+  async setMax(key: string, kg: number) {
     const m = await this.maxes();
-    m[`${exercise}|${side}`] = { kg, at: Date.now() };
+    m[key] = { kg, at: Date.now() };
     await set(maxKey(), m);
   },
   async deleteMax(key: string) {
@@ -123,7 +123,7 @@ export const store = {
       const all = await get<SetRecord[]>(sk, []);
       if (all.some((r) => r.exercise === oldName)) { for (const r of all) if (r.exercise === oldName) r.exercise = newName; await set(sk, all); }
       const m = await get<MaxMap>(mk, {}); const out: MaxMap = {}; let changed = false;
-      for (const [k, v] of Object.entries(m)) { const [ex, side] = k.split("|"); if (ex === oldName) changed = true; const nk = `${ex === oldName ? newName : ex}|${side}`; if (!out[nk] || out[nk].kg < v.kg) out[nk] = v; }
+      for (const [k, v] of Object.entries(m)) { const [ex, ...rest] = k.split("|"); if (ex === oldName) changed = true; const nk = [ex === oldName ? newName : ex, ...rest].join("|"); if (!out[nk] || out[nk].kg < v.kg) out[nk] = v; }
       if (changed) await set(mk, out);
     }
   },
