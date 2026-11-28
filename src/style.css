@@ -145,3 +145,29 @@ input[type="date"], input[type="range"] { font-size: 16px; }
 .picker-item { display: block; width: 100%; text-align: left; background: transparent; border: 0; border-radius: 8px; padding: 11px 10px; font-size: 15px; font-weight: 500; }
 .picker-item:active { background: var(--panel2); }
 .picker-create { color: var(--accent2); }
+
+/* ---------- landscape: chart left, numbers right ---------- */
+@media (orientation: landscape) and (max-height: 600px) {
+  .top { flex-direction: row; align-items: center; gap: 10px; padding-top: calc(4px + env(safe-area-inset-top)); padding-bottom: 4px; }
+  .top .hdr-ex { flex: 1 1 auto; min-width: 0; font-size: 16px; }
+  .top .conn { flex: 0 0 auto; max-width: 60%; }
+  #tab-train.tab.active { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: 10px; align-items: start; grid-auto-flow: dense; }
+  #tab-train.tab.active > * { grid-column: 2; margin-top: 0; margin-bottom: 6px; }
+  /* right column order: banner, live kg, stats, start, countdown, summary — then the selectors */
+  #tab-train.tab.active > .banner { grid-row: 1; }
+  #tab-train.tab.active > .live { grid-column: 2; grid-row: 2; }
+  #tab-train.tab.active > .stats { grid-row: 3; }
+  #tab-train.tab.active > .actions { grid-row: 4; }
+  #tab-train.tab.active > .row:has(#preCount) { grid-row: 5; justify-content: flex-start; }
+  #tab-train.tab.active > .row:has(#preCount) label.inline { flex-direction: row; align-items: center; min-width: 0; }
+  #tab-train.tab.active > #summary { grid-row: 6; }
+  #tab-train.tab.active > .chartwrap { grid-column: 1; grid-row: 1 / span 40; --chart-fill: 1; height: calc(100vh - 118px); box-sizing: border-box; margin: 0; }
+  #tab-train.tab.active > .live .bigkg { font-size: 40px; }
+  #tab-train.tab.active > .stats { gap: 4px; }
+  #tab-train.tab.active > .stats .stat { padding: 5px 8px; }
+  #tab-train.tab.active > .stats .stat .v { font-size: 17px; }
+  #tab-train.tab.active > .banner { padding: 6px 10px; }
+  #tab-train.tab.active > .banner .phase { font-size: 16px; }
+  #tab-train.tab.active > .banner .countdown { font-size: 20px; }
+  #tab-train.tab.active > .actions .big { padding: 10px; font-size: 16px; }
+}
