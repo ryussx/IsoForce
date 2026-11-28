@@ -5,9 +5,9 @@ import { Share } from "@capacitor/share";
 import { repsFor, performedAt, type SetRecord } from "./metrics";
 
 export function toCSV(sets: SetRecord[], person = ""): string {
-  const head = ["person", "id", "date_performed", "recorded_at", "exercise", "side", "contraction", "handle", "links", "external_kg", "mode", "duration_s", "peak_kg", "avg_kg", "output_kgs", "inroad_pct", "reps", "auto_reps", "rep_peaks"];
+  const head = ["person", "id", "date_performed", "recorded_at", "exercise", "side", "contraction", "handle", "links", "external_kg", "offset_kg", "mode", "duration_s", "peak_kg", "avg_kg", "output_kgs", "inroad_pct", "reps", "auto_reps", "rep_peaks"];
   const rows = sets.map((s) => [
-    q(person), s.id, isoDate(performedAt(s)), new Date(s.startedAt).toISOString(), q(s.exercise), s.side, s.contraction ?? "complete", q(s.handle ?? ""), s.links ?? 0, s.extKg ?? 0, s.mode, s.durationS.toFixed(1),
+    q(person), s.id, isoDate(performedAt(s)), new Date(s.startedAt).toISOString(), q(s.exercise), s.side, s.contraction ?? "complete", q(s.handle ?? ""), s.links ?? 0, s.extKg ?? 0, s.offsetKg ?? 0, s.mode, s.durationS.toFixed(1),
     s.peak, s.avg, s.output, s.inroad, repsFor(s), s.reps?.length ?? 0, q((s.reps ?? []).map((r) => r.peak).join(" ")),
   ].join(","));
   return [head.join(","), ...rows].join("\n");
